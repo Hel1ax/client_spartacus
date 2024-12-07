@@ -65,7 +65,7 @@ module.exports = {
             target: 'https://server-spartacus.onrender.com',
         }],
 
-        allowedHosts: 'all'
+        allowedHosts: 'https://server-spartacus.onrender.com'
     },
     mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
 }
