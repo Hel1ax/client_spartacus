@@ -56,12 +56,16 @@ module.exports = {
 
     devServer: {
         hot: true, 
-        port: 8080,
+        port: 3000,
+        disableHostCheck: true,
         historyApiFallback: true,
+        public: 'https://server-spartacus.onrender.com',
         proxy: [{
             context: ['/api'],
-            target: 'https://server-spartacus.onrender.com/',
+            target: 'https://server-spartacus.onrender.com',
         }],
+
+        allowedHosts: 'all'
     },
     mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
 }
