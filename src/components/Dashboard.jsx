@@ -16,7 +16,7 @@ const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  
   const [isVenueModalOpen, setVenueModalOpen] = useState(false);
   const [venueForm, setVenueForm] = useState({
     name: '',
@@ -68,7 +68,7 @@ const Dashboard = () => {
       };
 
       const response = await axios.post('bookings', bookingData);
-      setBookings([...bookings, response.data]);
+      setBookings([...bookings, {...response.data, venue: venues.find(v => v.id === response.data.venueId)}]);
 
       setSelectedVenue(null);
       setStartDateTime('');
@@ -99,9 +99,15 @@ const Dashboard = () => {
 
   const handleCreateOrEditVenue = async () => {
     try {
+      const config = {
+        headers: {
+          'x-auth-token': localStorage.getItem('token'),
+        },
+      };
       if (editVenue) {
+        console.log(venueForm)
         // Редактирование существующей площадки
-        await axios.put(`venues/${editVenue.id}`, venueForm);
+        await axios.put(`venues/${editVenue.id}`, venueForm, config);
         setVenues((prev) =>
           prev.map((venue) =>
             venue.id === editVenue.id ? { ...venue, ...venueForm } : venue
@@ -110,7 +116,8 @@ const Dashboard = () => {
         alert('Площадка успешно обновлена!');
       } else {
         // Создание новой площадки
-        const response = await axios.post('venues', venueForm);
+        console.log(venueForm)
+        const response = await axios.post('venues', venueForm, config);
         setVenues([...venues, response.data]);
         alert('Площадка успешно создана!');
       }
@@ -134,16 +141,21 @@ const Dashboard = () => {
 
   const handleSaveBooking = async (bookingData) => {
     try {
+      const config = {
+        headers: {
+          'x-auth-token': localStorage.getItem('token'),
+        },
+      };
       if (editBooking) {
         // Редактирование бронирования
-        await axios.put(`bookings/${editBooking.id}`, bookingData);
+        await axios.put(`bookings/${editBooking.id}`, bookingData, config);
         setBookings((prev) =>
           prev.map((b) => (b.id === editBooking.id ? { ...b, ...bookingData } : b))
         );
         alert('Бронирование успешно обновлено!');
       } else {
         // Создание нового бронирования
-        const response = await axios.post('bookings', bookingData);
+        const response = await axios.post('bookings', bookingData, config);
         setBookings([...bookings, response.data]);
         alert('Бронирование успешно создано!');
       }
@@ -156,7 +168,14 @@ const Dashboard = () => {
     }
   };
 
-  
+  const onChange = (name, value) => {
+    console.log(venueForm)
+    setVenueForm({
+      ...venueForm,
+      [name]: value
+    });
+    console.log(venueForm)
+  }
 
   if (loading) {
     return <div>Загрузка...</div>;
@@ -191,16 +210,16 @@ const Dashboard = () => {
         <BookingForm
           venues={venues}
           selectedVenue={selectedVenue}
-          setSelectedVenue={setSelectedVenue}
+          onChangeSelectedVenue={setSelectedVenue}
           startDateTime={startDateTime}
-          setStartDateTime={setStartDateTime}
+          onChangeStartDateTime={setStartDateTime}
           endDateTime={endDateTime}
-          setEndDateTime={setEndDateTime}
+          onChangeEndDateTime={setEndDateTime}
           onCreateBooking={createBooking}
         />
       )}
 
-      <BookingData role={role} bookings={bookings} />
+      <BookingData role={role} bookings={bookings.filter((booking) => booking.userId === user?.id)} />
 
       {role === 'admin' && (
         <button
@@ -214,7 +233,7 @@ const Dashboard = () => {
       <VenueModal
         isOpen={isVenueModalOpen}
         venueForm={venueForm}
-        setVenueForm={setVenueForm}
+        onChange={onChange}
         onClose={() => {
           setVenueModalOpen(false);
           setEditVenue(null);
